@@ -57,6 +57,7 @@ typedef struct ability { //struct for player abilities
 
 void hideCursor();
 void main_menu();
+void reset_globals();
 void nextLevel(grid&);
 int  initGrid(grid&, int&, int&);
 int  generateGrid(grid&, int&, int&);
@@ -97,6 +98,7 @@ void hideCursor() {
 }
 
 void main_menu() {
+	reset_globals();
 	grid mainGrid(26, vector<char>(116));
 	system("cls");
 	cout << "         ___    _" << endl
@@ -122,6 +124,11 @@ void main_menu() {
 	cout << "                       "; pause;
 
 	nextLevel(mainGrid);
+}
+
+void reset_globals() {
+	dungeon_width = 16; dungeon_height = 6; points_number = 0;
+	level_number = 0; player_health = 50; //set player health here
 }
 
 void nextLevel(grid& mainGrid) {
