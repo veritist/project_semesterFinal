@@ -69,12 +69,12 @@ int  drawGrid(grid);
 const int number_of_directions = 8; //essential for grid randomizer
 const int player_damage = 21;
 
-int dungeon_width = 0; int dungeon_height = 0; int points_number = 0;
-int player_health = 50; //set player health here
+int dungeon_width = 16; int dungeon_height = 6; int points_number = 0;
+int level_number = 0; int player_health = 50; //set player health here
 
 int main() {
 	srand(static_cast<unsigned int>(time(NULL)));
-	grid mainGrid(50, vector<char>(200));
+	grid mainGrid(26, vector<char>(116));
 
 	hideCursor();
 
@@ -93,15 +93,18 @@ void hideCursor() {
 }
 
 void nextLevel(grid& mainGrid) {
-	if ((dungeon_width <= 200) && (dungeon_height <= 50)) { //musn't pass vector borders
-		dungeon_width += 16; dungeon_height += 4;
-	}
+
+	//musn't pass vector borders
+	if (dungeon_width <= 116) dungeon_width += 4; 
+	if ((dungeon_height <= 24)&&(level_number % 2 == 0)) dungeon_height += 2;
+
 	int x = 0; int y = 0;
 	initGrid(mainGrid, x, y);
 	fillWithObjects(mainGrid);
 
 	x = 1; y = dungeon_height / 2; //setting 'x' and 'y' for global map
-	system("cls"); drawGrid(mainGrid); //clear screen and draw changed grid
+	level_number++;
+	refresh; //clear screen and draw changed grid
 	draw_ui();
 	globalMap(mainGrid, x, y);
 }
@@ -374,8 +377,9 @@ void globalMap(grid& mainGrid, int& x, int& y) {
 					break;
 				}
 				if (((mainGrid[y][x + 1]) == 'X')) { //if there is an exit, start new level
-					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' '; x++; nextLevel(mainGrid);
-					refresh;
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' '; x++;
+					add_points(2);
+					nextLevel(mainGrid);
 					break;
 				}
 				break;
@@ -511,15 +515,23 @@ void add_points(int pointsGranted) {
 void draw_ui() { //draw points meter and player health
 	HANDLE hCon; COORD cPos;
 	hCon = GetStdHandle(STD_OUTPUT_HANDLE);
+
 	cPos.Y = dungeon_height;
+	cPos.X = 0;
+	SetConsoleCursorPosition(hCon, cPos);
+	cout << "LEVEL " << level_number << "   ";
+
+	cPos.Y = dungeon_height+2;
 	cPos.X = 0;
 	SetConsoleCursorPosition(hCon, cPos);
 	cout << "[HP]" << player_health << "   ";
 
-	cPos.Y = dungeon_height;
+	cPos.Y = dungeon_height+2;
 	cPos.X = 8;
 	SetConsoleCursorPosition(hCon, cPos);
 	cout << "[PT]" << points_number << "   ";
+
+	
 }
 
 bool engageFight() {
@@ -600,6 +612,7 @@ bool engageFight() {
 
 		if (current_enemy.health <= 0) {
 			cout << "The enemy was slain!" << endl;
+			add_points(1);
 			pause;
 			return true;
 		}
