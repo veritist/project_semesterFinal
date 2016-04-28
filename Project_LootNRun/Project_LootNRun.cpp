@@ -21,10 +21,10 @@
 #define key_3 51
 
 //need to work on these
-#define UP_FREE ((mainGrid[i][j] == '.') && (mainGrid[i - 1][j] == '|') && (mainGrid[i - 2][j] == '|') && (mainGrid[i - 3][j] == '|') && (mainGrid[i - 1][j - 1] == '|') && (mainGrid[i - 1][j + 1] == '|'))
-#define RIGHT_FREE ((mainGrid[i][j] == '.') && (mainGrid[i][j + 1] == '|') && (mainGrid[i][j + 2] == '|') && (mainGrid[i][j + 3] == '|') && (mainGrid[i + 1][j + 1] != '.') && (mainGrid[i - 1][j + 1] != '.') && (mainGrid[i - 1][j] != '*'))
-#define DOWN_FREE ((mainGrid[i][j] == '.') && (mainGrid[i + 1][j] == '|') && (mainGrid[i + 2][j] == '|') && (mainGrid[i + 3][j] == '|') && (mainGrid[i + 1][j + 1] == '|') && (mainGrid[i + 1][j - 1] == '|'))
-#define LEFT_FREE ((mainGrid[i][j] == '.') && (mainGrid[i][j - 1] == '|') && (mainGrid[i][j - 2] == '|') && (mainGrid[i][j - 3] == '|') && (mainGrid[i - 1][j - 1] != '.') && (mainGrid[i + 1][j - 1] != '.'))
+#define UP_FREE ((mainGrid[i][j] == ' ') && (mainGrid[i - 1][j] == '|') && (mainGrid[i - 2][j] == '|') && (mainGrid[i - 3][j] == '|') && (mainGrid[i - 1][j - 1] == '|') && (mainGrid[i - 1][j + 1] == '|'))
+#define RIGHT_FREE ((mainGrid[i][j] == ' ') && (mainGrid[i][j + 1] == '|') && (mainGrid[i][j + 2] == '|') && (mainGrid[i][j + 3] == '|') && (mainGrid[i + 1][j + 1] != ' ') && (mainGrid[i - 1][j + 1] != ' ') && (mainGrid[i - 1][j] != '*'))
+#define DOWN_FREE ((mainGrid[i][j] == ' ') && (mainGrid[i + 1][j] == '|') && (mainGrid[i + 2][j] == '|') && (mainGrid[i + 3][j] == '|') && (mainGrid[i + 1][j + 1] == '|') && (mainGrid[i + 1][j - 1] == '|'))
+#define LEFT_FREE ((mainGrid[i][j] == ' ') && (mainGrid[i][j - 1] == '|') && (mainGrid[i][j - 2] == '|') && (mainGrid[i][j - 3] == '|') && (mainGrid[i - 1][j - 1] != ' ') && (mainGrid[i + 1][j - 1] != ' '))
 
 #define break_line cout << endl
 #define pause cout << "[SPACE]" << endl; for(;;) if(_getch() == 32) break;
@@ -58,6 +58,9 @@ bool checkReachedBorder(grid&, int&, int&);
 int  fillWithObjects(grid&);
 void globalMap(grid&, int&, int&);
 void consoleMove(int, int, int);
+void heal_player();
+void add_points(int);
+void draw_ui();
 bool engageFight();
 enemy selectEnemy();
 int  drawGrid(grid);
@@ -99,6 +102,7 @@ void nextLevel(grid& mainGrid) {
 
 	x = 1; y = dungeon_height / 2; //setting 'x' and 'y' for global map
 	system("cls"); drawGrid(mainGrid); //clear screen and draw changed grid
+	draw_ui();
 	globalMap(mainGrid, x, y);
 }
 
@@ -115,7 +119,7 @@ int initGrid(grid& mainGrid, int &x, int &y) {
 	}
 	y = dungeon_height / 2; //entrance will always be in the middle
 
-	mainGrid[y][x] = '[';
+	mainGrid[y][x] = 'X';
 	x++;					//marking the entance and placing the player
 	mainGrid[y][x] = 'P';
 
@@ -136,25 +140,25 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 
 		if (dungeonRandomizer == 0) {
 			if ((mainGrid[y - 1][x - 1] == '|') && (mainGrid[y - 1][x + 1] == '|') && (mainGrid[y - 1][x] == '|')) {
-				mainGrid[y - 1][x] = '.';
+				mainGrid[y - 1][x] = ' ';
 				y--;
 			}
 		}
 		if (dungeonRandomizer == 1) {
-			if (((mainGrid[y + 1][x + 1] != '.') && (mainGrid[y - 1][x + 1] != '.')) && (mainGrid[y][x + 1] == '|')) {
-				mainGrid[y][x + 1] = '.';
+			if (((mainGrid[y + 1][x + 1] != ' ') && (mainGrid[y - 1][x + 1] != ' ')) && (mainGrid[y][x + 1] == '|')) {
+				mainGrid[y][x + 1] = ' ';
 				x++;
 			}
 		}
 		if (dungeonRandomizer == 2) {
 			if ((mainGrid[y + 1][x + 1] == '|') && (mainGrid[y + 1][x - 1] == '|') && (mainGrid[y + 1][x] == '|')) {
-				mainGrid[y + 1][x] = '.';
+				mainGrid[y + 1][x] = ' ';
 				y++;
 			}
 		}
 		if (dungeonRandomizer == 3) {
-			if (((mainGrid[y - 1][x - 1] != '.') && (mainGrid[y + 1][x - 1] != '.')) && (mainGrid[y][x - 1] == '|')) {
-				mainGrid[y][x - 1] = '.';
+			if (((mainGrid[y - 1][x - 1] != ' ') && (mainGrid[y + 1][x - 1] != ' ')) && (mainGrid[y][x - 1] == '|')) {
+				mainGrid[y][x - 1] = ' ';
 				x--;
 			}
 		}
@@ -172,7 +176,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 			for (int i = heightRandomizer; i < dungeon_height; i++) {
 				for (int j = widthRandomizer; j < dungeon_width; j++) {
 					if UP_FREE{
-						mainGrid[i - 1][j] = '.';
+						mainGrid[i - 1][j] = ' ';
 					x = j; y = i - 1;
 					break;
 					}
@@ -183,7 +187,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 			for (int i = heightRandomizer; i >= 0; i--) {
 				for (int j = widthRandomizer; j >= 0; j--) {
 					if UP_FREE{
-						mainGrid[i - 1][j] = '.';
+						mainGrid[i - 1][j] = ' ';
 					x = j; y = i - 1;
 					break;
 					}
@@ -194,7 +198,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 			for (int i = heightRandomizer; i < dungeon_height; i++) {
 				for (int j = widthRandomizer; j < dungeon_width; j++) {
 					if RIGHT_FREE{
-						mainGrid[i][j + 1] = '.';
+						mainGrid[i][j + 1] = ' ';
 					x = j + 1; y = i;
 					break;
 					}
@@ -205,7 +209,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 			for (int i = heightRandomizer; i >= 0; i--) {
 				for (int j = widthRandomizer; j >= 0; j--) {
 					if RIGHT_FREE{
-						mainGrid[i][j + 1] = '.';
+						mainGrid[i][j + 1] = ' ';
 					x = j + 1; y = i;
 					break;
 					}
@@ -216,7 +220,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 			for (int i = heightRandomizer; i < dungeon_height; i++) {
 				for (int j = widthRandomizer; j < dungeon_width; j++) {
 					if DOWN_FREE{
-						mainGrid[i + 1][j] = '.';
+						mainGrid[i + 1][j] = ' ';
 					x = j; y = i + 1;
 					break;
 					}
@@ -227,7 +231,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 			for (int i = heightRandomizer; i >= 0; i--) {
 				for (int j = widthRandomizer; j >= 0; j--) {
 					if DOWN_FREE{
-						mainGrid[i + 1][j] = '.';
+						mainGrid[i + 1][j] = ' ';
 					x = j; y = i + 1;
 					break;
 					}
@@ -247,7 +251,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 				for (int i = exeptionHeight; i < dungeon_height; i++) {
 					for (int j = exeptionWidth; j < dungeon_width; j++) {
 						if LEFT_FREE{
-							mainGrid[i][j - 1] = '.';
+							mainGrid[i][j - 1] = ' ';
 						x = j - 1; y = i;
 						break;
 						}
@@ -258,7 +262,7 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 				for (int i = exeptionHeight; i <= 0; i--) {
 					for (int j = exeptionWidth; j <= 0; j--) {
 						if LEFT_FREE{
-							mainGrid[i][j - 1] = '.';
+							mainGrid[i][j - 1] = ' ';
 						x = j - 1; y = i;
 						break;
 						}
@@ -274,10 +278,10 @@ int generateGrid(grid& mainGrid, int &x, int &y) {
 bool checkReachedBorder(grid& mainGrid, int &x, int &y) {
 
 	//if current 'x' is three symbols left to the right border, we fill the gap and end generation
-	if ((mainGrid[y][x] == '.') && (mainGrid[y][x + 3] == '*')) {
-		mainGrid[y][x + 3] = ']';
-		mainGrid[y][x + 2] = '.';
-		mainGrid[y][x + 1] = '.';
+	if ((mainGrid[y][x] == ' ') && (mainGrid[y][x + 3] == '*')) {
+		mainGrid[y][x + 3] = 'X';
+		mainGrid[y][x + 2] = ' ';
+		mainGrid[y][x + 1] = ' ';
 		return true;
 	}
 	return false;
@@ -286,13 +290,16 @@ bool checkReachedBorder(grid& mainGrid, int &x, int &y) {
 int fillWithObjects(grid& mainGrid) { //randomly fills the dungeon with objects, consider adding difficulty
 	for (int i = 0; i < dungeon_height; i++) {
 		for (int j = 0; j < dungeon_width; j++) {
-			if (mainGrid[i][j] == '.') {
+			if (mainGrid[i][j] == ' ') {
 				int objectsRandomizer = rand() % 100;
 				if ((objectsRandomizer >= 0) && (objectsRandomizer < 3)) {
 					mainGrid[i][j] = 'E';
 				}
 				if ((objectsRandomizer >= 30) && (objectsRandomizer < 33)) {
 					mainGrid[i][j] = 'C';
+				}
+				if ((objectsRandomizer >= 65) && (objectsRandomizer < 68)) {
+					mainGrid[i][j] = 'H';
 				}
 			}
 		}
@@ -309,86 +316,126 @@ void globalMap(grid& mainGrid, int& x, int& y) {
 			int keypress = _getch();
 			switch (keypress) {
 			case key_LEFT:
-				if (((mainGrid[y][x - 1]) == '.')) { //if there is nothing, move there
-					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.';
+				if (((mainGrid[y][x - 1]) == ' ')) { //if there is nothing, move there
+					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = ' ';
 					consoleMove(x, y, left); x--;
 					break;
 				}
 				if (((mainGrid[y][x - 1]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
-						mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--;
+						mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = ' '; x--;
 					}
 					refresh;
+					draw_ui();
 					break;
 				}
 				if (((mainGrid[y][x - 1]) == 'C')) { //if there is a chest, add points
-					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--;
-					refresh;
+					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, left); x--;
+					add_points(0);
+					draw_ui();
+					break;
+				}
+				if (((mainGrid[y][x - 1]) == 'H')) { //if there is a potion, heal player
+					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, left); x--;
+					heal_player();
+					draw_ui();
 					break;
 				}
 				break;
 
 			case key_RIGHT:
-				if ((mainGrid[y][x + 1]) == '.') { //if there is nothing, move there
-					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.';
+				if ((mainGrid[y][x + 1]) == ' ') { //if there is nothing, move there
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' ';
 					consoleMove(x, y, right); x++;
 					break;
 				}
 				if (((mainGrid[y][x + 1]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
-						mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++;
+						mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' '; x++;
 					}
 					refresh;
+					draw_ui();
 					break;
 				}
 				if (((mainGrid[y][x + 1]) == 'C')) { //if there is a chest, add points
-					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++;
-					refresh;
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, right); x++;
+					add_points(0);
+					draw_ui();
 					break;
 				}
-				if (((mainGrid[y][x + 1]) == ']')) { //if there is an exit, start new level
-					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++; nextLevel(mainGrid);
+				if (((mainGrid[y][x + 1]) == 'H')) { //if there is a potion, heal player
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, right); x++;
+					heal_player();
+					draw_ui();
+					break;
+				}
+				if (((mainGrid[y][x + 1]) == 'X')) { //if there is an exit, start new level
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = ' '; x++; nextLevel(mainGrid);
 					refresh;
 					break;
 				}
 				break;
 
 			case key_UP:
-				if ((mainGrid[y - 1][x]) == '.') { //if there is nothing, move there
-					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.';
+				if ((mainGrid[y - 1][x]) == ' ') { //if there is nothing, move there
+					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = ' ';
 					consoleMove(x, y, up); y--;
 					break;
 				}
 				if (((mainGrid[y - 1][x]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
-						mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
+						mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = ' '; y--;
 					}
 					refresh;
+					draw_ui();
 					break;
 				}
 				if (((mainGrid[y - 1][x]) == 'C')) { //if there is a chest, add points
-					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
-					refresh;
+					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, up); y--;
+					add_points(0);
+					draw_ui();
+					break;
+				}
+				if (((mainGrid[y - 1][x]) == 'H')) { //if there is a potion, heal player
+					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, up); y--;
+					heal_player();
+					draw_ui();
 					break;
 				}
 				break;
 
 			case key_DOWN:
-				if ((mainGrid[y + 1][x]) == '.') { //if there is nothing, move there
-					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.';
+				if ((mainGrid[y + 1][x]) == ' ') { //if there is nothing, move there
+					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = ' ';
 					consoleMove(x, y, down); y++;
 					break;
 				}
 				if (((mainGrid[y + 1][x]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
-						mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.'; y++;
+						mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = ' '; y++;
 					}
 					refresh;
+					draw_ui();
 					break;
 				}
 				if (((mainGrid[y + 1][x]) == 'C')) { //if there is a chest, add points
-					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.'; y++;
-					refresh;
+					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, down); y++;
+					add_points(0);
+					draw_ui();
+					break;
+				}
+				if (((mainGrid[y + 1][x]) == 'H')) { //if there is a potion, heal player
+					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = ' ';
+					consoleMove(x, y, down); y++;
+					heal_player();
+					draw_ui();
 					break;
 				}
 				break;
@@ -405,7 +452,7 @@ void consoleMove(int x, int y, int direction) { //display player new position
 		cPos.Y = y;
 		cPos.X = x;
 		SetConsoleCursorPosition(hCon, cPos);
-		cout << ".";
+		cout << " ";
 		cPos.Y = y - 1;
 		SetConsoleCursorPosition(hCon, cPos);
 		cout << "P";
@@ -414,7 +461,7 @@ void consoleMove(int x, int y, int direction) { //display player new position
 		cPos.Y = y;
 		cPos.X = x;
 		SetConsoleCursorPosition(hCon, cPos);
-		cout << ".";
+		cout << " ";
 		cPos.X = x + 1;
 		SetConsoleCursorPosition(hCon, cPos);
 		cout << "P";
@@ -423,7 +470,7 @@ void consoleMove(int x, int y, int direction) { //display player new position
 		cPos.Y = y;
 		cPos.X = x;
 		SetConsoleCursorPosition(hCon, cPos);
-		cout << ".";
+		cout << " ";
 		cPos.Y = y + 1;
 		SetConsoleCursorPosition(hCon, cPos);
 		cout << "P";
@@ -432,12 +479,47 @@ void consoleMove(int x, int y, int direction) { //display player new position
 		cPos.Y = y;
 		cPos.X = x;
 		SetConsoleCursorPosition(hCon, cPos);
-		cout << ".";
+		cout << " ";
 		cPos.X = x - 1;
 		SetConsoleCursorPosition(hCon, cPos);
 		cout << "P";
 		break;
 	}
+}
+
+void heal_player() {
+	if (player_health < 50) {
+		player_health += 10;
+		if (player_health > 50) {
+			player_health = 50;
+		}
+	}
+}
+
+void add_points(int pointsGranted) {
+	if (pointsGranted == 0) { //collecting a chest
+		points_number += 50;
+	}
+	if (pointsGranted == 1) { //defeating an enemy
+		points_number += 100;
+	}
+	if (pointsGranted == 2) { //new level
+		points_number += 200;
+	}
+}
+
+void draw_ui() { //draw points meter and player health
+	HANDLE hCon; COORD cPos;
+	hCon = GetStdHandle(STD_OUTPUT_HANDLE);
+	cPos.Y = dungeon_height;
+	cPos.X = 0;
+	SetConsoleCursorPosition(hCon, cPos);
+	cout << "[HP]" << player_health << "   ";
+
+	cPos.Y = dungeon_height;
+	cPos.X = 8;
+	SetConsoleCursorPosition(hCon, cPos);
+	cout << "[PT]" << points_number << "   ";
 }
 
 bool engageFight() {
@@ -492,7 +574,7 @@ bool engageFight() {
 					cout << "Player tried to run away ";
 					for (int i = 0; i < 3; i++) {
 						cout << ".";
-						Sleep(600);
+						Sleep(200);
 					}
 					int generateRunAway = rand() % 2;
 					if (generateRunAway == 0) {
@@ -561,7 +643,12 @@ enemy selectEnemy() {
 int drawGrid(grid mainGrid) {
 	for (int i = 0; i < dungeon_height; i++) {
 		for (int j = 0; j < dungeon_width; j++) {
-			cout << mainGrid[i][j];
+
+			//customise output
+			if ((mainGrid[i][j] == '*') || (mainGrid[i][j] == '|')) cout << char(219);
+			else if ((mainGrid[i][j] == 'X') || (mainGrid[i][j] == 'X')) cout << char(177);
+			else cout << mainGrid[i][j];
+
 		}
 		break_line;
 	}
