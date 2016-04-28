@@ -27,8 +27,13 @@
 #define LEFT_FREE ((mainGrid[i][j] == '.') && (mainGrid[i][j - 1] == '|') && (mainGrid[i][j - 2] == '|') && (mainGrid[i][j - 3] == '|') && (mainGrid[i - 1][j - 1] != '.') && (mainGrid[i + 1][j - 1] != '.'))
 
 #define break_line cout << endl
-
 #define pause cout << "[SPACE]" << endl; for(;;) if(_getch() == 32) break;
+#define refresh system("cls"); drawGrid(mainGrid); //clear screen and draw changed grid
+
+#define up 0
+#define right 1
+#define down 2
+#define left 3 
 
 using namespace std;
 typedef vector<vector<char>>grid; //2-dimentional vector
@@ -45,12 +50,14 @@ typedef struct ability { //struct for player abilities
 	int cur_cooldown;
 };
 
+void hideCursor();
 void nextLevel(grid&);
 int  initGrid(grid&, int&, int&);
 int  generateGrid(grid&, int&, int&);
 bool checkReachedBorder(grid&, int&, int&);
 int  fillWithObjects(grid&);
 void globalMap(grid&, int&, int&);
+void consoleMove(int, int, int);
 bool engageFight();
 enemy selectEnemy();
 int  drawGrid(grid);
@@ -66,10 +73,20 @@ int main() {
 	srand(static_cast<unsigned int>(time(NULL)));
 	grid mainGrid(50, vector<char>(200));
 
+	hideCursor();
+
 	nextLevel(mainGrid); //game starts
 
 	system("PAUSE");
 	return 0;
+}
+
+void hideCursor() {
+	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_CURSOR_INFO cursorInfo;
+	GetConsoleCursorInfo(out, &cursorInfo);
+	cursorInfo.bVisible = false; // set the cursor visibility
+	SetConsoleCursorInfo(out, &cursorInfo);
 }
 
 void nextLevel(grid& mainGrid) {
@@ -287,85 +304,139 @@ int fillWithObjects(grid& mainGrid) { //randomly fills the dungeon with objects,
 void globalMap(grid& mainGrid, int& x, int& y) {
 
 	//Controlls are given to the player
-	for (;;) {
+	while (true) {
 		if (_kbhit()) {
 			int keypress = _getch();
 			switch (keypress) {
-			case key_LEFT: {
+			case key_LEFT:
 				if (((mainGrid[y][x - 1]) == '.')) { //if there is nothing, move there
-					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--;
+					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.';
+					consoleMove(x, y, left); x--;
 					break;
 				}
 				if (((mainGrid[y][x - 1]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
 						mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--;
-						break;
 					}
+					refresh;
+					break;
 				}
 				if (((mainGrid[y][x - 1]) == 'C')) { //if there is a chest, add points
 					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--;
+					refresh;
 					break;
 				}
 				break;
-			}
-			case key_RIGHT: {
+
+			case key_RIGHT:
 				if ((mainGrid[y][x + 1]) == '.') { //if there is nothing, move there
-					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++;
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.';
+					consoleMove(x, y, right); x++;
 					break;
 				}
 				if (((mainGrid[y][x + 1]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
 						mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++;
-						break;
 					}
+					refresh;
+					break;
 				}
 				if (((mainGrid[y][x + 1]) == 'C')) { //if there is a chest, add points
 					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++;
+					refresh;
 					break;
 				}
 				if (((mainGrid[y][x + 1]) == ']')) { //if there is an exit, start new level
 					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++; nextLevel(mainGrid);
+					refresh;
 					break;
 				}
 				break;
-			}
-			case key_UP: {
+
+			case key_UP:
 				if ((mainGrid[y - 1][x]) == '.') { //if there is nothing, move there
-					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
+					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.';
+					consoleMove(x, y, up); y--;
 					break;
 				}
 				if (((mainGrid[y - 1][x]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
 						mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
-						break;
 					}
+					refresh;
+					break;
 				}
 				if (((mainGrid[y - 1][x]) == 'C')) { //if there is a chest, add points
 					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
+					refresh;
 					break;
 				}
 				break;
-			}
-			case key_DOWN: {
+
+			case key_DOWN:
 				if ((mainGrid[y + 1][x]) == '.') { //if there is nothing, move there
-					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.'; y++;
+					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.';
+					consoleMove(x, y, down); y++;
 					break;
 				}
 				if (((mainGrid[y + 1][x]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
 						mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.'; y++;
-						break;
 					}
+					refresh;
+					break;
 				}
 				if (((mainGrid[y + 1][x]) == 'C')) { //if there is a chest, add points
 					mainGrid[y + 1][x] = 'P'; mainGrid[y][x] = '.'; y++;
+					refresh;
 					break;
 				}
 				break;
 			}
-			}
-			system("cls"); drawGrid(mainGrid); //clear screen and draw changed grid
 		}
+	}
+}
+
+void consoleMove(int x, int y, int direction) { //display player new position
+	HANDLE hCon; COORD cPos;
+	hCon = GetStdHandle(STD_OUTPUT_HANDLE);
+	switch (direction) {
+	case 0:
+		cPos.Y = y;
+		cPos.X = x;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << ".";
+		cPos.Y = y - 1;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << "P";
+		break;
+	case 1:
+		cPos.Y = y;
+		cPos.X = x;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << ".";
+		cPos.X = x + 1;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << "P";
+		break;
+	case 2:
+		cPos.Y = y;
+		cPos.X = x;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << ".";
+		cPos.Y = y + 1;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << "P";
+		break;
+	case 3:
+		cPos.Y = y;
+		cPos.X = x;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << ".";
+		cPos.X = x - 1;
+		SetConsoleCursorPosition(hCon, cPos);
+		cout << "P";
+		break;
 	}
 }
 
@@ -381,7 +452,7 @@ bool engageFight() {
 	pause;
 
 	int cooldown = 0;
-	for (;;) { //battle loop
+	while (true) { //battle loop
 
 		bool choose_attack_loop = true;
 		int dmgPlayer = rand() % player_damage;
@@ -425,7 +496,7 @@ bool engageFight() {
 					}
 					int generateRunAway = rand() % 2;
 					if (generateRunAway == 0) {
-						cout << " and did!";
+						cout << " and did!" << endl;
 						pause;
 						return false;
 					}
@@ -454,7 +525,7 @@ bool engageFight() {
 		cout << "Enemy attacks! ";
 		for (int i = 0; i < 3; i++) {
 			cout << ".";
-			Sleep(600);
+			Sleep(200);
 		}
 		cout << " " << dmgEnemy << " damage delivered to player!" << endl;
 
@@ -469,7 +540,6 @@ bool engageFight() {
 			pause;
 			exit(0); //consider redoing
 		}
-
 		pause;
 	}
 	return true;
