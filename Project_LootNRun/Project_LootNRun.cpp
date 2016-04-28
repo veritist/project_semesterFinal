@@ -15,6 +15,9 @@
 #define key_DOWN 80
 #define key_LEFT 75
 #define key_RIGHT 77
+#define key_ESC 27
+#define key_R 170
+#define key_R2 114 //for russian keyboard
 
 #define key_1 49
 #define key_2 50
@@ -78,7 +81,6 @@ int level_number = 0; int player_health = 50; //set player health here
 int main() {
 	srand(static_cast<unsigned int>(time(NULL)));
 
-	system("Color 1A");
 	hideCursor();
 	main_menu();
 
@@ -97,14 +99,28 @@ void hideCursor() {
 void main_menu() {
 	grid mainGrid(26, vector<char>(116));
 	system("cls");
-	cout <<"         ___    _" << endl
+	cout << "         ___    _" << endl
 		<< " _      |   " sl "  | |   ____" << endl
 		<< "| |     | |" sl " " sl " | |  |  . |" << endl
 		<< "| |___  | | " sl " " sl "| |  |    " sl endl
-		<< "|_____| |_|  " sl "___|  |__|__|" << endl;
+		<< "|_____| |_|  " sl "___|  |__|__|" << endl << endl;
 	cout << "       Loot 'N  Run" << endl
 		<< "       (by Veritist)" << endl;
 	cout << "          "; pause;
+
+	system("cls");
+
+	cout << "                       [RULES]" << endl
+		<< " In LNR you have to progress through randomly generated" << endl
+		<< "dungeons and get as many points as you can before you DIE." << endl
+		<< "          H - Health (resores 10 health)" << endl
+		<< "          E - Enemy (kill gives 100 points)" << endl
+		<< "          C - Chest (gives 50 points)" << endl
+		<< "    You also get 200 points for completing a level." << endl
+		<< "                      Good luck!" << endl;
+
+	cout << "                       "; pause;
+
 	nextLevel(mainGrid);
 }
 
@@ -459,6 +475,9 @@ void globalMap(grid& mainGrid, int& x, int& y) {
 					break;
 				}
 				break;
+			case key_ESC: exit(0); break; //exit game
+			case key_R: main_menu(); break; //reset game
+			case key_R2: main_menu(); break; //reset game
 			}
 		}
 	}
@@ -546,8 +565,11 @@ void draw_ui() { //draw points meter and player health
 	cPos.X = 8;
 	SetConsoleCursorPosition(hCon, cPos);
 	cout << "[PT]" << points_number << "   ";
-
-
+	
+	cPos.Y = dungeon_height + 3;
+	cPos.X = 0;
+	SetConsoleCursorPosition(hCon, cPos);
+	cout << "[ESC]EXIT [R]RESET";
 }
 
 bool engageFight() {
