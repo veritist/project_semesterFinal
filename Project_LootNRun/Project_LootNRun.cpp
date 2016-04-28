@@ -1,8 +1,11 @@
 #include "stdafx.h"
 
+//add default to switch case
+
 #include <iostream>
 #include <cstdlib>
 #include <vector>
+#include <string>
 #include <ctime>
 
 #include <Windows.h>
@@ -13,6 +16,10 @@
 #define key_LEFT 75
 #define key_RIGHT 77
 
+#define key_1 49
+#define key_2 50
+#define key_3 51
+
 //need to work on these
 #define UP_FREE ((mainGrid[i][j] == '.') && (mainGrid[i - 1][j] == '|') && (mainGrid[i - 2][j] == '|') && (mainGrid[i - 3][j] == '|') && (mainGrid[i - 1][j - 1] == '|') && (mainGrid[i - 1][j + 1] == '|'))
 #define RIGHT_FREE ((mainGrid[i][j] == '.') && (mainGrid[i][j + 1] == '|') && (mainGrid[i][j + 2] == '|') && (mainGrid[i][j + 3] == '|') && (mainGrid[i + 1][j + 1] != '.') && (mainGrid[i - 1][j + 1] != '.') && (mainGrid[i - 1][j] != '*'))
@@ -21,8 +28,22 @@
 
 #define break_line cout << endl
 
+#define pause cout << "[SPACE]" << endl; for(;;) if(_getch() == 32) break;
+
 using namespace std;
-typedef vector<vector<char>>grid;
+typedef vector<vector<char>>grid; //2-dimentional vector
+
+typedef struct enemy {	//struct for enemy
+	int base_damage;
+	int health;
+	string name;
+};
+
+typedef struct ability { //struct for player abilities
+	int damage;
+	int cooldown;
+	int cur_cooldown;
+};
 
 void nextLevel(grid&);
 int  initGrid(grid&, int&, int&);
@@ -31,10 +52,12 @@ bool checkReachedBorder(grid&, int&, int&);
 int  fillWithObjects(grid&);
 void globalMap(grid&, int&, int&);
 bool engageFight();
+enemy selectEnemy();
 int  drawGrid(grid);
 
 //setting global variables
 const int number_of_directions = 8; //essential for grid randomizer
+const int player_damage = 21;
 
 int dungeon_width = 0; int dungeon_height = 0; int points_number = 0;
 int player_health = 50; //set player health here
@@ -280,14 +303,14 @@ void globalMap(grid& mainGrid, int& x, int& y) {
 					}
 				}
 				if (((mainGrid[y][x - 1]) == 'C')) { //if there is a chest, add points
-					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--; 
+					mainGrid[y][x - 1] = 'P'; mainGrid[y][x] = '.'; x--;
 					break;
 				}
 				break;
 			}
 			case key_RIGHT: {
 				if ((mainGrid[y][x + 1]) == '.') { //if there is nothing, move there
-					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++; 
+					mainGrid[y][x + 1] = 'P'; mainGrid[y][x] = '.'; x++;
 					break;
 				}
 				if (((mainGrid[y][x + 1]) == 'E')) { //if there is an enemy, engage combat
@@ -308,12 +331,12 @@ void globalMap(grid& mainGrid, int& x, int& y) {
 			}
 			case key_UP: {
 				if ((mainGrid[y - 1][x]) == '.') { //if there is nothing, move there
-					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--; 
+					mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
 					break;
 				}
 				if (((mainGrid[y - 1][x]) == 'E')) { //if there is an enemy, engage combat
 					if (engageFight()) {
-						mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--; 
+						mainGrid[y - 1][x] = 'P'; mainGrid[y][x] = '.'; y--;
 						break;
 					}
 				}
@@ -347,7 +370,122 @@ void globalMap(grid& mainGrid, int& x, int& y) {
 }
 
 bool engageFight() {
+	enemy current_enemy = selectEnemy();
+
+	//setting player abilities
+	ability powAtt; powAtt.damage = 10; powAtt.cooldown = 2; powAtt.cur_cooldown = 0;
+
+	system("cls");
+	cout << "You have encountered a " << current_enemy.name << "!" << endl;
+
+	pause;
+
+	int cooldown = 0;
+	for (;;) { //battle loop
+
+		bool choose_attack_loop = true;
+		int dmgPlayer = rand() % player_damage;
+		int dmgEnemy = rand() % current_enemy.base_damage;
+
+		system("cls");
+		cout << "You have " << player_health << " HP!" << endl;
+		cout << "Enemy has " << current_enemy.health << " HP!" << endl;
+		break_line;
+
+		cout << "Your turn, choose an attack: " << endl
+			<< "Attack" << "  " << "Power Attack" << "   " << "Run Away" << endl
+			<< "  [1]  " << "  " << "    [2]";
+
+		if (powAtt.cur_cooldown > 0) cout << "(" << powAtt.cur_cooldown << ")" << "      [3]" << endl;
+		else cout << "         [3]" << endl;
+
+		while (choose_attack_loop) {
+			if (_kbhit()) {
+				int keypress = _getch();
+				switch (keypress) {
+				case key_1:
+					cout << "You use 'Attack', " << dmgPlayer << " damage delivered to " << current_enemy.name << "!" << endl;
+					current_enemy.health -= dmgPlayer;
+					cooldown = 1; choose_attack_loop = false; break; //Ability is executed, cooldown for next ability will be lowered
+
+				case key_2:
+					if (powAtt.cur_cooldown == 0) {
+						cout << "You use 'Power Attack', " << dmgPlayer + powAtt.damage << " damage delivered to " << current_enemy.name << "!" << endl;
+						current_enemy.health -= dmgPlayer + powAtt.damage;
+						powAtt.cur_cooldown = powAtt.cooldown;
+						cooldown = 1; choose_attack_loop = false; break;
+					}
+					break;
+
+				case key_3:
+					cout << "Player tried to run away ";
+					for (int i = 0; i < 3; i++) {
+						cout << ".";
+						Sleep(600);
+					}
+					int generateRunAway = rand() % 2;
+					if (generateRunAway == 0) {
+						cout << " and did!";
+						pause;
+						return false;
+					}
+					else {
+						cout << " but couldn't!" << endl;
+						cooldown = 1; choose_attack_loop = false; break;
+					}
+				}
+			}
+		}
+
+		//resetting cooldowns
+		if (powAtt.cur_cooldown > 0) powAtt.cur_cooldown -= cooldown;
+		cooldown = 0;
+
+		cout << "The enemy has " << current_enemy.health << "HP" << " left!" << endl;
+
+		pause; system("cls");
+
+		if (current_enemy.health <= 0) {
+			cout << "The enemy was slain!" << endl;
+			pause;
+			return true;
+		}
+
+		cout << "Enemy attacks! ";
+		for (int i = 0; i < 3; i++) {
+			cout << ".";
+			Sleep(600);
+		}
+		cout << " " << dmgEnemy << " damage delivered to player!" << endl;
+
+		player_health -= dmgEnemy;
+
+		cout << "You have " << player_health << " HP left!" << endl;
+
+		Sleep(200);
+
+		if (player_health <= 0) {
+			cout << "Game Over, you are dead!" << endl;
+			pause;
+			exit(0); //consider redoing
+		}
+
+		pause;
+	}
 	return true;
+}
+
+enemy selectEnemy() {
+	//init enemies here
+	enemy e_skeleton; e_skeleton.base_damage = 5; e_skeleton.health = 20; e_skeleton.name = "skeleton";
+	enemy e_battle_skeleton; e_battle_skeleton.base_damage = 10; e_battle_skeleton.health = 40; e_battle_skeleton.name = "battle skeleton";
+	enemy e_boss_skeleton; e_boss_skeleton.base_damage = 25; e_boss_skeleton.health = 60; e_boss_skeleton.name = "boss skeleton";
+
+	//pick a random enemy and return
+	int enemyRandomizer = rand() % 100;
+	if ((enemyRandomizer > 0) && (enemyRandomizer < 50)) return e_skeleton;
+	if ((enemyRandomizer >= 50) && (enemyRandomizer < 85)) return e_battle_skeleton;
+	if (enemyRandomizer >= 85) return e_boss_skeleton;
 }
 
 int drawGrid(grid mainGrid) {
@@ -359,21 +497,3 @@ int drawGrid(grid mainGrid) {
 	}
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
