@@ -35,6 +35,8 @@
 #define down 2
 #define left 3 
 
+#define sl << char(92) <<
+
 using namespace std;
 typedef vector<vector<char>>grid; //2-dimentional vector
 
@@ -51,6 +53,7 @@ typedef struct ability { //struct for player abilities
 };
 
 void hideCursor();
+void main_menu();
 void nextLevel(grid&);
 int  initGrid(grid&, int&, int&);
 int  generateGrid(grid&, int&, int&);
@@ -74,11 +77,10 @@ int level_number = 0; int player_health = 50; //set player health here
 
 int main() {
 	srand(static_cast<unsigned int>(time(NULL)));
-	grid mainGrid(26, vector<char>(116));
 
+	system("Color 1A");
 	hideCursor();
-
-	nextLevel(mainGrid); //game starts
+	main_menu();
 
 	system("PAUSE");
 	return 0;
@@ -92,11 +94,25 @@ void hideCursor() {
 	SetConsoleCursorInfo(out, &cursorInfo);
 }
 
+void main_menu() {
+	grid mainGrid(26, vector<char>(116));
+	system("cls");
+	cout <<"         ___    _" << endl
+		<< " _      |   " sl "  | |   ____" << endl
+		<< "| |     | |" sl " " sl " | |  |  . |" << endl
+		<< "| |___  | | " sl " " sl "| |  |    " sl endl
+		<< "|_____| |_|  " sl "___|  |__|__|" << endl;
+	cout << "       Loot 'N  Run" << endl
+		<< "       (by Veritist)" << endl;
+	cout << "          "; pause;
+	nextLevel(mainGrid);
+}
+
 void nextLevel(grid& mainGrid) {
 
 	//musn't pass vector borders
-	if (dungeon_width <= 116) dungeon_width += 4; 
-	if ((dungeon_height <= 24)&&(level_number % 2 == 0)) dungeon_height += 2;
+	if (dungeon_width <= 116) dungeon_width += 4;
+	if ((dungeon_height <= 24) && (level_number % 2 == 0)) dungeon_height += 2;
 
 	int x = 0; int y = 0;
 	initGrid(mainGrid, x, y);
@@ -295,13 +311,13 @@ int fillWithObjects(grid& mainGrid) { //randomly fills the dungeon with objects,
 		for (int j = 0; j < dungeon_width; j++) {
 			if (mainGrid[i][j] == ' ') {
 				int objectsRandomizer = rand() % 100;
-				if ((objectsRandomizer >= 0) && (objectsRandomizer < 3)) {
+				if ((objectsRandomizer >= 0) && (objectsRandomizer < 4)) {
 					mainGrid[i][j] = 'E';
 				}
-				if ((objectsRandomizer >= 30) && (objectsRandomizer < 33)) {
+				if ((objectsRandomizer >= 50) && (objectsRandomizer < 54)) {
 					mainGrid[i][j] = 'C';
 				}
-				if ((objectsRandomizer >= 65) && (objectsRandomizer < 68)) {
+				if (objectsRandomizer == 90) {
 					mainGrid[i][j] = 'H';
 				}
 			}
@@ -521,17 +537,17 @@ void draw_ui() { //draw points meter and player health
 	SetConsoleCursorPosition(hCon, cPos);
 	cout << "LEVEL " << level_number << "   ";
 
-	cPos.Y = dungeon_height+2;
+	cPos.Y = dungeon_height + 2;
 	cPos.X = 0;
 	SetConsoleCursorPosition(hCon, cPos);
 	cout << "[HP]" << player_health << "   ";
 
-	cPos.Y = dungeon_height+2;
+	cPos.Y = dungeon_height + 2;
 	cPos.X = 8;
 	SetConsoleCursorPosition(hCon, cPos);
 	cout << "[PT]" << points_number << "   ";
 
-	
+
 }
 
 bool engageFight() {
@@ -633,7 +649,7 @@ bool engageFight() {
 		if (player_health <= 0) {
 			cout << "Game Over, you are dead!" << endl;
 			pause;
-			exit(0); //consider redoing
+			main_menu();
 		}
 		pause;
 	}
@@ -648,8 +664,8 @@ enemy selectEnemy() {
 
 	//pick a random enemy and return
 	int enemyRandomizer = rand() % 100;
-	if ((enemyRandomizer > 0) && (enemyRandomizer < 50)) return e_skeleton;
-	if ((enemyRandomizer >= 50) && (enemyRandomizer < 85)) return e_battle_skeleton;
+	if ((enemyRandomizer >= 0) && (enemyRandomizer < 65)) return e_skeleton;
+	if ((enemyRandomizer >= 65) && (enemyRandomizer < 85)) return e_battle_skeleton;
 	if (enemyRandomizer >= 85) return e_boss_skeleton;
 }
 
